@@ -1,28 +1,48 @@
-# University Records API
+# University Records
 
-A Python backend for the university record-management assignment. It provides a REST API and query endpoints, but deliberately does **not** create, include, or populate a database. Configure `DATABASE_URL` to point at an existing SQL database before running it.
+Record management system for Ashcombe University, built for the group
+assignment. FastAPI backend,
+SQLAlchemy models, and a browser interface for running the assignment
+queries against the database.
 
 ## Run
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-export DATABASE_URL='postgresql+psycopg://user:password@localhost/university'
-uvicorn app.main:app --reload
-```
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    python -m app.seed
+    uvicorn app.main:app --reload
 
-The interactive API documentation is available at `/docs`.
+Open http://127.0.0.1:8000
 
-## Assignment queries
+`app.seed` creates the schema and loads dummy data. It defaults to
+SQLite at `./university.db`. For another engine, set `DATABASE_URL`
+before seeding and install the matching driver:
 
-The following query endpoints execute their SQL within the Python backend:
+    export DATABASE_URL='postgresql+psycopg://user:pass@localhost/university'
 
-- `GET /queries/students-by-course`
-- `GET /queries/final-year-high-achievers`
-- `GET /queries/unregistered-students`
-- `GET /queries/student-advisor/{student_id}`
-- `GET /queries/lecturers-by-expertise`
-- `GET /queries/courses-by-department`
-- `GET /queries/students-by-advisor/{lecturer_id}`
-- `GET /queries/staff-by-department`
+## Layout
+
+    app/database.py   engine and session
+    app/models.py     ORM models
+    app/records.py    search and record queries
+    app/reports.py    report queries
+    app/seed.py       schema creation and dummy data
+    app/main.py       API and query registry
+    app/static/       interface
+
+## Queries
+
+All eleven queries suggested in the project are implemented, plus search
+and record views. Query functions live in `app/records.py` and
+`app/reports.py`, each taking a session and returning a list of
+dictionaries.
+
+## Interface
+
+Two sections. **Search** covers Students, Staff, Courses, Programmes,
+Departments and Research as filterable lists, each row opening a record
+page with tabs. **Reports** covers Achievement, Students, Courses,
+Publications, Supervision and Workforce.
+
+The institution name is the `UNIVERSITY` constant in `app/main.py`.
