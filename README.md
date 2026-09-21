@@ -30,10 +30,11 @@ before seeding and install the matching driver:
     app/seed.py       schema creation and dummy data
     app/main.py       API and query registry
     app/static/       interface
+    tests/            unittest suite
 
 ## Queries
 
-All eleven queries suggested in the project are implemented, plus search
+All eleven queries suggested in the brief are implemented, plus search
 and record views. Query functions live in `app/records.py` and
 `app/reports.py`, each taking a session and returning a list of
 dictionaries.
