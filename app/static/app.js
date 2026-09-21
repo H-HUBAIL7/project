@@ -78,8 +78,9 @@ function filters(page) {
       const any = el("option", null, "Any");
       any.value = "";
       input.append(any);
-      (cat.options[spec.source] || []).forEach((value) => {
-        const option = el("option", null, value);
+      (cat.options[spec.source] || []).forEach((entry) => {
+        const [value, text] = Array.isArray(entry) ? entry : [entry, entry];
+        const option = el("option", null, text);
         option.value = value;
         input.append(option);
       });

@@ -237,6 +237,9 @@ def student_detail(
                         ("Status", student.graduation_status),
                         ("Advisor", advisor.name if advisor else None),
                         ("Advisor email", advisor.email if advisor else None),
+                        ("Advisor phone", advisor.phone if advisor else None),
+                        ("Advisor office",
+                         advisor.office if advisor else None),
                     ]
                 ),
             },
@@ -315,6 +318,7 @@ def search_staff(
     department: str = "",
     job_title: str = "",
     status: str = "",
+    area: str = "",
 ) -> Rows:
     academic = (
         select(
@@ -354,6 +358,18 @@ def search_staff(
         wanted = status == "active"
         academic = academic.where(Lecturer.active.is_(wanted))
         support = support.where(Staff.active.is_(wanted))
+    if area:
+        academic = academic.where(
+            Lecturer.id.in_(
+                select(lecturer_expertise.c.lecturer_id)
+                .join(
+                    ResearchArea,
+                    ResearchArea.id == lecturer_expertise.c.research_area_id,
+                )
+                .where(ResearchArea.name == area)
+            )
+        )
+        kind = "Academic"
 
     rows: Rows = []
     if kind != "Non-academic":

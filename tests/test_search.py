@@ -1,3 +1,6 @@
+from sqlalchemy import select
+
+from app import models as m
 from app import records
 
 from .support import DatabaseTestCase
@@ -76,6 +79,15 @@ class StaffSearchTests(DatabaseTestCase):
         rows = records.search_staff(self.session, department="Physics")
         self.assertTrue(rows)
         self.assertTrue(all(r["Department"] == "Physics" for r in rows))
+
+    def test_expertise_filter(self) -> None:
+        rows = records.search_staff(self.session, area="Genomics")
+        self.assertTrue(rows)
+        for row in rows:
+            lecturer = self.session.scalar(
+                select(m.Lecturer).where(m.Lecturer.lecturer_id == row["id"])
+            )
+            self.assertIn("Genomics", [a.name for a in lecturer.expertise])
 
     def test_inactive_filter(self) -> None:
         rows = records.search_staff(self.session, status="inactive")
