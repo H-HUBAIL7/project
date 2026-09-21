@@ -190,6 +190,7 @@ class WorkforceTests(DatabaseTestCase):
             len(list(self.session.scalars(select(m.StudentEmployment)))),
         )
 
+
 class MyReportTests(DatabaseTestCase):
     def test_active_courses_are_active(self) -> None:
         rows = reports.course_report(self.session, status="active")
@@ -206,7 +207,7 @@ class MyReportTests(DatabaseTestCase):
         )
 
         self.assertEqual(rows, [])
-    
+
     def test_physics_courses_match_department(self) -> None:
         rows = reports.course_report(
             self.session,
