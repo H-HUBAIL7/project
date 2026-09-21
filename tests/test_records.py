@@ -26,6 +26,14 @@ class StudentRecordTests(DatabaseTestCase):
         }
         self.assertTrue(expected <= labels)
 
+    def test_advisor_contact_details_shown(self) -> None:
+        record = records.student_detail(self.session, "S00001")
+        labels = {i["label"] for i in record["tabs"][0]["panel"]["items"]}
+        self.assertTrue(
+            {"Advisor", "Advisor email", "Advisor phone", "Advisor office"}
+            <= labels
+        )
+
     def test_student_grade_count_matches_database(self) -> None:
         student = self.session.scalar(
             select(m.Student).where(m.Student.student_id == "S00001")

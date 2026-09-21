@@ -86,6 +86,8 @@ def student_report(
     program: str = "",
     year: str = "",
     registration: str = "",
+    course: str = "",
+    lecturer: str = "",
     semester: str = "Spring",
     academic_year: str = "2025/26",
 ) -> Rows:
@@ -115,6 +117,20 @@ def student_report(
         statement = statement.where(Student.id.in_(registered))
     elif registration == "not registered":
         statement = statement.where(Student.id.not_in(registered))
+    if course or lecturer:
+        taught = (
+            select(Enrollment.student_id)
+            .join(Course, Course.id == Enrollment.course_id)
+            .join(
+                course_lecturers, course_lecturers.c.course_id == Course.id
+            )
+            .join(Lecturer, Lecturer.id == course_lecturers.c.lecturer_id)
+        )
+        if course:
+            taught = taught.where(Course.code == course)
+        if lecturer:
+            taught = taught.where(Lecturer.lecturer_id == lecturer)
+        statement = statement.where(Student.id.in_(taught))
     return _rows(session, statement)
 
 
@@ -158,7 +174,16 @@ def course_report(
     if status:
         statement = statement.where(Course.active.is_(status == "active"))
     if department:
-        statement = statement.where(Department.name == department)
+        statement = statement.where(
+            Course.id.in_(
+                select(course_lecturers.c.course_id)
+                .join(
+                    Lecturer, Lecturer.id == course_lecturers.c.lecturer_id
+                )
+                .join(Department, Department.id == Lecturer.department_id)
+                .where(Department.name == department)
+            )
+        )
     if level:
         statement = statement.where(Course.level == level)
     if lecturer:
@@ -260,13 +285,18 @@ def workforce_report(
     department: str = "",
     employment_type: str = "",
     status: str = "",
+    program: str = "",
 ) -> Rows:
-    supervised = (
-        select(func.count(StudentEmployment.id))
-        .where(StudentEmployment.supervisor_staff_id == Staff.id)
-        .correlate(Staff)
-        .scalar_subquery()
+    count = select(func.count(StudentEmployment.id)).where(
+        StudentEmployment.supervisor_staff_id == Staff.id
     )
+    if program:
+        count = (
+            count.join(Student, Student.id == StudentEmployment.student_id)
+            .join(Program, Program.id == Student.program_id)
+            .where(Program.name == program)
+        )
+    supervised = count.correlate(Staff).scalar_subquery()
     statement = (
         select(
             Staff.staff_id.label("id"),
@@ -289,4 +319,6 @@ def workforce_report(
         )
     if status:
         statement = statement.where(Staff.active.is_(status == "active"))
+    if program:
+        statement = statement.where(supervised > 0)
     return _rows(session, statement)

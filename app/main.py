@@ -83,6 +83,7 @@ PAGES: dict[str, dict[str, Any]] = {
             choice("kind", "Type", "staff_types"),
             choice("department", "Department", "departments"),
             choice("job_title", "Role", "roles"),
+            choice("area", "Expertise", "expertise"),
             choice("status", "Status", "activity"),
         ],
         "run": records.search_staff,
@@ -159,6 +160,8 @@ PAGES: dict[str, dict[str, Any]] = {
         "filters": [
             choice("status", "Status", "student_status"),
             choice("registration", "Registration", "registration"),
+            choice("course", "Course", "course_labels"),
+            choice("lecturer", "Lecturer", "lecturer_labels"),
             choice("program", "Programme", "programs"),
             choice("year", "Year", "years"),
         ],
@@ -208,6 +211,7 @@ PAGES: dict[str, dict[str, Any]] = {
         "detail": "staff",
         "filters": [
             choice("department", "Department", "departments"),
+            choice("program", "Supervises from", "programs"),
             choice("employment_type", "Contract", "employment_types"),
             choice("status", "Status", "activity"),
         ],
@@ -225,7 +229,7 @@ DETAILS: dict[str, Callable[..., Any]] = {
 }
 
 
-def options(db: Session) -> dict[str, list[str]]:
+def options(db: Session) -> dict[str, list[Any]]:
     def col(field) -> list[str]:
         return [
             value
@@ -235,7 +239,24 @@ def options(db: Session) -> dict[str, list[str]]:
             if value
         ]
 
+    course_labels = [
+        [code, f"{code} {name}"]
+        for code, name in db.execute(
+            select(Course.code, Course.name).order_by(Course.code)
+        ).all()
+    ]
+    lecturer_labels = [
+        [key, f"{key} {name}"]
+        for key, name in db.execute(
+            select(Lecturer.lecturer_id, Lecturer.name).order_by(
+                Lecturer.lecturer_id
+            )
+        ).all()
+    ]
+
     return {
+        "course_labels": course_labels,
+        "lecturer_labels": lecturer_labels,
         "programs": col(Program.name),
         "departments": col(Department.name),
         "faculties": col(Department.faculty),
