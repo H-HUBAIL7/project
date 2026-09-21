@@ -189,3 +189,38 @@ class WorkforceTests(DatabaseTestCase):
             total,
             len(list(self.session.scalars(select(m.StudentEmployment)))),
         )
+
+class MyReportTests(DatabaseTestCase):
+    def test_active_courses_are_active(self) -> None:
+        rows = reports.course_report(self.session, status="active")
+
+        self.assertTrue(rows)
+        self.assertTrue(
+            all(row["status"] == "active" for row in rows)
+        )
+
+    def test_unknown_department_returns_no_courses(self) -> None:
+        rows = reports.course_report(
+            self.session,
+            department="Does Not Exist",
+        )
+
+        self.assertEqual(rows, [])
+    
+    def test_physics_courses_match_department(self) -> None:
+        rows = reports.course_report(
+            self.session,
+            department="Physics",
+        )
+
+        self.assertTrue(rows)
+
+        for row in rows:
+            course = self.session.scalar(
+                select(m.Course).where(m.Course.code == row["id"])
+            )
+            lecturer_departments = [
+                lecturer.department.name
+                for lecturer in course.lecturers
+            ]
+            self.assertIn("Physics", lecturer_departments)
